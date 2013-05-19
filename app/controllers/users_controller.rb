@@ -1,7 +1,9 @@
 class UsersController < ApplicationController
-  before_filter :signed_in_user, only: [:index, :edit, :update, :destroy]
-  before_filter :correct_user,   only: [:edit, :update]
-  before_filter :admin_user,     only: :destroy
+  before_filter :signed_in_user,        only: [:index, :edit, :update, :destroy]
+  before_filter :signed_in_user_filter, only: [:new, :create]
+  before_filter :correct_user,          only: [:edit, :update]
+  before_filter :admin_user,            only: :destroy
+  before_filter :avoid_destroy_myself,  only: :destroy
 
   def show
     @user = User.find(params[:id])
@@ -48,7 +50,14 @@ class UsersController < ApplicationController
   private
 
     def signed_in_user
-      redirect_to signin_url, notice: "Please sign in." unless signed_in?
+      unless signed_in?
+        store_location
+        redirect_to signin_url, notice: "Please sign in."
+      end
+    end    
+
+    def signed_in_user_filter
+      redirect_to root_path, notice: "Already logged in" if signed_in?
     end
 
     def correct_user
@@ -58,5 +67,10 @@ class UsersController < ApplicationController
 
     def admin_user
       redirect_to(root_path) unless current_user.admin?
+    end
+
+    def avoid_destroy_myself
+      @user = User.find(params[:id])
+      redirect_to users_path, :notice => "You can not destroy yourself" unless !current_user?(@user)
     end
 end
