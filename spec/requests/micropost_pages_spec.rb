@@ -31,15 +31,21 @@ describe "Micropost pages" do
     end
   end
 
-  describe "micropost destruction" do
-    before { FactoryGirl.create(:micropost, user: user) }
+  describe "micropost destruction" do   
 
     describe "as correct user" do
+      before { FactoryGirl.create(:micropost, user: user) }
       before { visit root_path }
-
       it "should delete a micropost" do
         expect { click_link "delete" }.to change(Micropost, :count).by(-1)
       end
+    end
+
+    describe "as incorrect user" do
+      let(:other_user) { FactoryGirl.create(:user, email: "wrong@example.com") }    
+      before { FactoryGirl.create(:micropost, user: other_user) }
+      before { visit root_path }
+      it { should_not have_link "delete"}
     end
   end
 end
